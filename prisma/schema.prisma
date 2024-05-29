@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Occurrence {
+  id               String         @id @default(uuid())
+  anonymous        Boolean        @default(false)
+  attachments      Attachment[]
+  category         Category       @relation(fields: [categoryId], references: [id])
+  categoryId       String
+  classificationId String
+  classification   Classification @relation(fields: [classificationId], references: [id])
+  date             DateTime       @default(now())
+  description      String
+  location         Location       @relation(fields: [locationId], references: [id])
+  locationId       String
+  participantsIds  String[]
+  status           Status         @relation(fields: [statusId], references: [id])
+  statusId         String
+  tags             Tag[]
+  userId           String
+  user             User           @relation(fields: [userId], references: [id])
+}
+
+model Category {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  occurrences Occurrence[]
+  slug        String       @unique
+}
+
+model User {
+  id          String       @id @default(uuid())
+  email       String       @unique
+  name        String
+  occurrences Occurrence[]
+  password    String
+  roleId      String
+  role        Role         @relation(fields: [roleId], references: [id])
+}
+
+model Role {
+  id    String @id @default(uuid())
+  name  String @unique
+  users User[]
+  slug  String @unique
+}
+
+model Tag {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  occurrences Occurrence[]
+  slug        String       @unique
+}
+
+model Status {
+  id          String       @id @default(uuid())
+  name        String
+  occurrences Occurrence[]
+  slug        String       @unique
+}
+
+model Location {
+  id          String       @id @default(uuid())
+  description String
+  occurrences Occurrence[]
+}
+
+model Classification {
+  id          String       @id @default(uuid())
+  approved    Boolean      @default(false)
+  description String
+  occurrences Occurrence[]
+}
+
+model Attachment {
+  id               String         @id @default(uuid())
+  attachmentType   AttachmentType @relation(fields: [attachmentTypeId], references: [id])
+  attachmentTypeId String
+  occurrenceId     String
+  occurrence       Occurrence     @relation(fields: [occurrenceId], references: [id])
+}
+
+model AttachmentType {
+  id           String       @id @default(uuid())
+  description String
+  attachments   Attachment[]
+}
