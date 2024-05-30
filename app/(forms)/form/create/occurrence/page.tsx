@@ -37,7 +37,6 @@ import { Label } from "@/app/components/ui/label";
 
 import { cn } from "@/app/lib/utils";
 import { useToast } from "@/app/components/ui/use-toast";
-import { connectToMongoDB } from "@/app/helpers/mongodb";
 
 const formSchema = z.object({
   user: z.string({
