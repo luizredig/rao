@@ -87,7 +87,7 @@ model Attachment {
 }
 
 model AttachmentType {
-  id           String       @id @default(uuid())
+  id          String       @id @default(uuid())
   description String
-  attachments   Attachment[]
+  attachments Attachment[]
 }
