@@ -41,10 +41,12 @@ import { useToast } from "@/app/components/ui/use-toast";
 import useUserStore from "@/app/zustand/models/useUserStore";
 import useCategoryStore from "@/app/zustand/models/useCategoryStore";
 import useLocationStore from "@/app/zustand/models/useLocationStore";
+import useTagStore from "@/app/zustand/models/useTagStore";
 
 import { User } from "@prisma/client";
 import { Category } from "@prisma/client";
 import { Location } from "@prisma/client";
+import { Tag } from "@prisma/client";
 
 const formSchema = z.object({
   user: z.string({
@@ -76,29 +78,6 @@ const formSchema = z.object({
   anonymous: z.boolean().default(false).optional(),
 });
 
-const tags = [
-  {
-    id: "bullying",
-    label: "Bullying",
-  },
-  {
-    id: "cyberbullying",
-    label: "Cyberbsullying",
-  },
-  {
-    id: "racism",
-    label: "Racismo",
-  },
-  {
-    id: "misogyny",
-    label: "Misoginia",
-  },
-  {
-    id: "other",
-    label: "Outro",
-  },
-] as const;
-
 const Page = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -108,7 +87,6 @@ const Page = () => {
     },
   });
 
-  const category = form.watch("category");
   const { toast } = useToast();
 
   const handleSubmit = (data: z.infer<typeof formSchema>) => {
@@ -176,6 +154,26 @@ const Page = () => {
     fetchLocations();
   }, [fetchLocations]);
 
+  // Fetching tags
+  const category = form.watch("category");
+
+  const { tags, fetchTags } = useTagStore();
+
+  const [currentTags, setTags]: any = useState([]);
+
+  const prevTagsRef = useRef<Tag[]>();
+
+  useEffect(() => {
+    if (prevTagsRef.current !== tags) {
+      setTags(tags);
+      prevTagsRef.current = tags;
+    }
+  }, [tags]);
+
+  useEffect(() => {
+    fetchTags();
+  }, [fetchTags]);
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <Form {...form}>
@@ -237,7 +235,7 @@ const Page = () => {
                   <SelectContent>
                     {currentCategories.categories &&
                       currentCategories.categories.map((category: Category) => (
-                        <SelectItem key={category.id} value={category.id}>
+                        <SelectItem key={category.id} value={category.slug}>
                           {category.name}
                         </SelectItem>
                       ))}
@@ -250,7 +248,7 @@ const Page = () => {
           />
 
           {/* Tags */}
-          {category === "occurrence" && (
+          {currentTags.tags && category === "occurrence" && (
             <FormField
               control={form.control}
               name="tags"
@@ -262,7 +260,7 @@ const Page = () => {
                     Selecione as tags que se aplicam
                   </FormDescription>
 
-                  {tags.map((tag) => (
+                  {currentTags.tags.map((tag: Tag) => (
                     <FormField
                       key={tag.id}
                       control={form.control}
@@ -289,7 +287,7 @@ const Page = () => {
                             </FormControl>
 
                             <FormLabel className="font-normal">
-                              {tag.label}
+                              {tag.name}
                             </FormLabel>
                           </FormItem>
                         );
