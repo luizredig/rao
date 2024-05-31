@@ -38,6 +38,10 @@ import { Label } from "@/app/components/ui/label";
 import { cn } from "@/app/lib/utils";
 import { useToast } from "@/app/components/ui/use-toast";
 
+import useUserStore from "@/app/zustand/useUserStore";
+import { useEffect, useRef, useState } from "react";
+import { User } from "@prisma/client";
+
 const formSchema = z.object({
   user: z.string({
     message: "Informe o usuário.",
@@ -67,21 +71,6 @@ const formSchema = z.object({
     }),
   anonymous: z.boolean().default(false).optional(),
 });
-
-const users = [
-  {
-    id: "user1",
-    label: "Usuário 1",
-  },
-  {
-    id: "user2",
-    label: "Usuário 2",
-  },
-  {
-    id: "user3",
-    label: "Usuário 3",
-  },
-] as const;
 
 const categories = [
   {
@@ -151,6 +140,23 @@ const Page = () => {
     });
   };
 
+  const { users, fetchUsers } = useUserStore();
+
+  const [currentUsers, setUsers]: any = useState([]);
+
+  const prevUsersRef = useRef<User[]>();
+
+  useEffect(() => {
+    if (prevUsersRef.current !== users) {
+      setUsers(users);
+      prevUsersRef.current = users;
+    }
+  }, [users]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <Form {...form}>
@@ -177,11 +183,12 @@ const Page = () => {
                   </FormControl>
 
                   <SelectContent>
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.label}
-                      </SelectItem>
-                    ))}
+                    {currentUsers.users &&
+                      currentUsers.users.map((user: any) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {user.name}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
 
