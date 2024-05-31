@@ -38,9 +38,12 @@ import { Label } from "@/app/components/ui/label";
 import { cn } from "@/app/lib/utils";
 import { useToast } from "@/app/components/ui/use-toast";
 
-import useUserStore from "@/app/zustand/useUserStore";
+import useUserStore from "@/app/zustand/models/useUserStore";
 import { useEffect, useRef, useState } from "react";
 import { User } from "@prisma/client";
+
+import useCategoryStore from "@/app/zustand/models/useCategoryStore";
+import { Category } from "@prisma/client";
 
 const formSchema = z.object({
   user: z.string({
@@ -140,6 +143,7 @@ const Page = () => {
     });
   };
 
+  // Fetching users
   const { users, fetchUsers } = useUserStore();
 
   const [currentUsers, setUsers]: any = useState([]);
@@ -156,6 +160,24 @@ const Page = () => {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  // Fetching categories
+  const { categories, fetchCategories } = useCategoryStore();
+
+  const [currentCategories, setCategories]: any = useState([]);
+
+  const prevCategoriesRef = useRef<Category[]>();
+
+  useEffect(() => {
+    if (prevCategoriesRef.current !== categories) {
+      setCategories(categories);
+      prevCategoriesRef.current = categories;
+    }
+  }, [categories]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
@@ -184,7 +206,7 @@ const Page = () => {
 
                   <SelectContent>
                     {currentUsers.users &&
-                      currentUsers.users.map((user: any) => (
+                      currentUsers.users.map((user: User) => (
                         <SelectItem key={user.id} value={user.id}>
                           {user.name}
                         </SelectItem>
@@ -216,11 +238,12 @@ const Page = () => {
                   </FormControl>
 
                   <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.label}
-                      </SelectItem>
-                    ))}
+                    {currentCategories.categories &&
+                      currentCategories.categories.map((category: Category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
 
