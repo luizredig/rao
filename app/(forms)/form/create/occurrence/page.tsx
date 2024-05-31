@@ -3,6 +3,7 @@
 import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useRef, useState } from "react";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -37,13 +38,13 @@ import { Label } from "@/app/components/ui/label";
 
 import { cn } from "@/app/lib/utils";
 import { useToast } from "@/app/components/ui/use-toast";
-
 import useUserStore from "@/app/zustand/models/useUserStore";
-import { useEffect, useRef, useState } from "react";
-import { User } from "@prisma/client";
-
 import useCategoryStore from "@/app/zustand/models/useCategoryStore";
+import useLocationStore from "@/app/zustand/models/useLocationStore";
+
+import { User } from "@prisma/client";
 import { Category } from "@prisma/client";
+import { Location } from "@prisma/client";
 
 const formSchema = z.object({
   user: z.string({
@@ -75,13 +76,6 @@ const formSchema = z.object({
   anonymous: z.boolean().default(false).optional(),
 });
 
-const categories = [
-  {
-    id: "occurrence",
-    label: "Ocorrência",
-  },
-] as const;
-
 const tags = [
   {
     id: "bullying",
@@ -102,21 +96,6 @@ const tags = [
   {
     id: "other",
     label: "Outro",
-  },
-] as const;
-
-const locations = [
-  {
-    id: "class1",
-    label: "Sala 1",
-  },
-  {
-    id: "class2",
-    label: "Sala 2",
-  },
-  {
-    id: "class3",
-    label: "Sala 3",
   },
 ] as const;
 
@@ -178,6 +157,24 @@ const Page = () => {
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
+
+  // Fetching locations
+  const { locations, fetchLocations } = useLocationStore();
+
+  const [currentLocations, setLocations]: any = useState([]);
+
+  const prevLocationsRef = useRef<Location[]>();
+
+  useEffect(() => {
+    if (prevLocationsRef.current !== locations) {
+      setLocations(locations);
+      prevLocationsRef.current = locations;
+    }
+  }, [locations]);
+
+  useEffect(() => {
+    fetchLocations();
+  }, [fetchLocations]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
@@ -372,11 +369,12 @@ const Page = () => {
                   </FormControl>
 
                   <SelectContent>
-                    {locations.map((location) => (
-                      <SelectItem key={location.id} value={location.id}>
-                        {location.label}
-                      </SelectItem>
-                    ))}
+                    {currentLocations.locations &&
+                      currentLocations.locations.map((location: Location) => (
+                        <SelectItem key={location.id} value={location.id}>
+                          {location.description}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
 
