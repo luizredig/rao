@@ -1,36 +1,25 @@
 import { prismaClient } from "@/app/lib/prisma";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
-  const {
-    anonymous,
-    categoryId,
-    classificationId,
-    date,
-    description,
-    locationId,
-    participantsIds,
-    statusId,
-    tagsIds,
-    userId,
-  } = await req.json();
+export async function POST(req: any) {
+  const data = await req.json();
 
   const occurrence = await prismaClient.occurrence.create({
     data: {
-      anonymous: anonymous,
-      categoryId: categoryId,
-      classificationId: classificationId,
-      date: date,
-      description: description,
-      locationId: locationId,
-      participantsIds: [...participantsIds],
-      statusId: statusId,
+      anonymous: data.anonymous,
+      categoryId: data.categoryId,
+      classificationId: data.classificationId,
+      date: data.date,
+      description: data.description,
+      locationId: data.locationId,
+      participantsIds: [...data.participantsIds],
+      statusId: data.statusId,
       tags: {
-        connect: tagsIds.map((id: string) => ({ id: id })),
+        connect: data.tagsIds.map((id: string) => ({ id: id })),
       },
-      userId: userId,
+      userId: data.userId,
     },
   });
 
-  return NextResponse.json({ occurrence });
+  return NextResponse.json({ status: 200 });
 }

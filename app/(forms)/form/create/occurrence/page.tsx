@@ -37,7 +37,6 @@ import { Switch } from "@/app/components/ui/switch";
 import { Label } from "@/app/components/ui/label";
 
 import { cn } from "@/app/lib/utils";
-import { useToast } from "@/app/components/ui/use-toast";
 import useUserStore from "@/app/zustand/models/useUserStore";
 import useCategoryStore from "@/app/zustand/models/useCategoryStore";
 import useLocationStore from "@/app/zustand/models/useLocationStore";
@@ -49,22 +48,14 @@ import { Location } from "@prisma/client";
 import { Tag } from "@prisma/client";
 
 const formSchema = z.object({
-  user: z.string({
-    message: "Informe o usuário.",
-  }),
-  category: z.string({
+  anonymous: z.boolean().default(false).optional(),
+  categoryId: z.string({
     message: "Selecione um categoria.",
   }),
-  tags: z.array(z.string()).refine((value) => value.some((tag) => tag), {
-    message: "Selecione no mínimo uma tag.",
-  }),
+  classificationId: z.string().optional(),
   date: z.date({
     required_error: "Informe a data.",
   }),
-  location: z.string({
-    message: "Informe o local.",
-  }),
-  participants: z.array(z.string()).optional(),
   description: z
     .string({
       message: "A descrição é obrigatória.",
@@ -75,7 +66,17 @@ const formSchema = z.object({
     .max(250, {
       message: "A mensagem deve ter no máximo 250 caracteres.",
     }),
-  anonymous: z.boolean().default(false).optional(),
+  locationId: z.string({
+    message: "Informe o local.",
+  }),
+  participantsIds: z.array(z.string()).optional(),
+  statusId: z.string().optional(),
+  tagsIds: z.array(z.string()).refine((value) => value.some((tag) => tag), {
+    message: "Selecione no mínimo uma tag.",
+  }),
+  userId: z.string({
+    message: "Informe o usuário.",
+  }),
 });
 
 const Page = () => {
@@ -83,21 +84,39 @@ const Page = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       anonymous: false,
-      tags: [],
+      tagsIds: [],
+      participantsIds: [],
+      classificationId: "pending",
+      statusId: "pending",
     },
   });
 
-  const { toast } = useToast();
+  const handleSubmit = async (data: z.infer<typeof formSchema>) => {
+    const json = JSON.stringify(data);
 
-  const handleSubmit = (data: z.infer<typeof formSchema>) => {
-    toast({
-      title: "Occurrence submitted:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    });
+    try {
+      const response = await fetch("/api/create/occurrence", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: json,
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok.");
+      }
+
+      const result = await response.json();
+
+      if (result.status === 200) {
+        alert("Occurrence has been created.");
+        window.location.reload();
+      }
+    } catch (error) {
+      alert("Error");
+      console.error("Error:", error);
+    }
   };
 
   // Fetching users
@@ -155,7 +174,6 @@ const Page = () => {
   }, [fetchLocations]);
 
   // Fetching tags
-  const category = form.watch("category");
 
   const { tags, fetchTags } = useTagStore();
 
@@ -184,7 +202,7 @@ const Page = () => {
           {/* User */}
           <FormField
             control={form.control}
-            name="user"
+            name="userId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Usuário</FormLabel>
@@ -217,7 +235,7 @@ const Page = () => {
           {/* Category */}
           <FormField
             control={form.control}
-            name="category"
+            name="categoryId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Categoria</FormLabel>
@@ -235,7 +253,7 @@ const Page = () => {
                   <SelectContent>
                     {currentCategories.categories &&
                       currentCategories.categories.map((category: Category) => (
-                        <SelectItem key={category.id} value={category.slug}>
+                        <SelectItem key={category.id} value={category.id}>
                           {category.name}
                         </SelectItem>
                       ))}
@@ -248,23 +266,23 @@ const Page = () => {
           />
 
           {/* Tags */}
-          {currentTags.tags && category === "occurrence" && (
-            <FormField
-              control={form.control}
-              name="tags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tags</FormLabel>
+          <FormField
+            control={form.control}
+            name="tagsIds"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tags</FormLabel>
 
-                  <FormDescription>
-                    Selecione as tags que se aplicam
-                  </FormDescription>
+                <FormDescription>
+                  Selecione as tags que se aplicam
+                </FormDescription>
 
-                  {currentTags.tags.map((tag: Tag) => (
+                {currentTags.tags &&
+                  currentTags.tags.map((tag: Tag) => (
                     <FormField
                       key={tag.id}
                       control={form.control}
-                      name="tags"
+                      name="tagsIds"
                       render={({ field }) => {
                         return (
                           <FormItem
@@ -295,11 +313,10 @@ const Page = () => {
                     />
                   ))}
 
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           {/* Date */}
           <FormField
@@ -351,7 +368,7 @@ const Page = () => {
           {/* Location */}
           <FormField
             control={form.control}
-            name="location"
+            name="locationId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Localização</FormLabel>
