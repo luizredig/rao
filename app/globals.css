@@ -54,6 +54,9 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply h-full min-w-80 bg-background text-foreground;
+  }
+  html {
+    @apply min-w-80;
   }
 }
