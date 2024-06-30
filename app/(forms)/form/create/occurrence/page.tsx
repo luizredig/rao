@@ -60,9 +60,6 @@ const formSchema = z.object({
     .string({
       message: "A descrição é obrigatória.",
     })
-    .min(50, {
-      message: "A mensagem deve ter no mínimo 50 caracteres.",
-    })
     .max(250, {
       message: "A mensagem deve ter no máximo 250 caracteres.",
     }),
