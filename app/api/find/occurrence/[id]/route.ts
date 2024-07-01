@@ -6,6 +6,20 @@ export async function GET(_: any, res: any) {
 
   const occurrence = await prismaClient.occurrence.findUnique({
     where: { id: id },
+    select: {
+      anonymous: true,
+      date: true,
+      description: true,
+      id: true,
+      tags: true,
+      user: {
+        select: {
+          name: true,
+          password: true,
+          role: true,
+        },
+      },
+    },
   });
 
   return NextResponse.json({ occurrence });
