@@ -1,15 +1,78 @@
+"use client";
+
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent } from "@/app/components/ui/card";
-import Link from "next/link";
 import Image from "next/image";
+import { z } from "zod";
 
-import type { Metadata } from "next";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/app/components/ui/form";
 
-export const metadata: Metadata = {
-  title: "Login",
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Input } from "@/app/components/ui/input";
+import { useRouter } from "next/navigation";
+
+const formSchema = z
+  .object({
+    email: z
+      .string({ message: "Informe o email." })
+      .email({ message: "E-mail inválido." }),
+    password: z.string({ message: "Informe a senha." }),
+  })
+  .refine(
+    async (data) => {
+      const isValid = await checkEmailAndPassword(data.email, data.password);
+
+      return isValid;
+    },
+    {
+      message: "E-mail ou senha inválidos.",
+      path: ["password"],
+    },
+  );
+
+const checkEmailAndPassword = async (email: string, password: string) => {
+  try {
+    const response = await fetch(`/api/find/email/${email}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Network response was not ok.");
+    }
+
+    const result = await response.json();
+
+    const isPasswordCorrect = password === result.user.password;
+
+    return isPasswordCorrect;
+  } catch (error) {
+    console.error("Error:", error);
+  }
 };
 
 const Page = () => {
+  const router = useRouter();
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {},
+  });
+
+  const handleSubmit = async (data: z.infer<typeof formSchema>) => {
+    router.push("/home");
+  };
+
   return (
     <>
       <div className="flex h-screen w-full flex-col sm:flex-row">
@@ -20,7 +83,7 @@ const Page = () => {
             Bem-vindo(a) ao <span className="font-semibold">RAO</span>
           </p>
 
-          <div className="relative flex h-48 w-1/2">
+          <div className="relative flex h-1/2 w-1/2">
             {/* Green circle */}
             <div className="absolute left-[-50px] top-[-30px] h-32 w-32 rounded-full bg-green-400"></div>
 
@@ -28,9 +91,57 @@ const Page = () => {
             <Card className="absolute z-[1] flex h-full w-full items-center justify-center bg-white/20 shadow-lg ring-1 ring-black/5 backdrop-blur-xl">
               <CardContent className="p-6">
                 <div className="flex w-full items-center justify-center">
-                  <Link href={"/home"}>
-                    <Button>Entrar</Button>
-                  </Link>
+                  <Form {...form}>
+                    <form
+                      onSubmit={form.handleSubmit(handleSubmit)}
+                      className="flex flex-col gap-4"
+                    >
+                      {/* Email */}
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+
+                            <FormControl>
+                              <Input
+                                placeholder="Email"
+                                onChange={field.onChange}
+                                defaultValue={field.value}
+                              />
+                            </FormControl>
+
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Password */}
+                      <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Senha</FormLabel>
+
+                            <FormControl>
+                              <Input
+                                type="password"
+                                placeholder="Senha"
+                                onChange={field.onChange}
+                                defaultValue={field.value}
+                              />
+                            </FormControl>
+
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button type="submit">Enviar</Button>
+                    </form>
+                  </Form>
                 </div>
               </CardContent>
             </Card>
