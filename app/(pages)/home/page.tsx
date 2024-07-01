@@ -1,6 +1,12 @@
 import OccurrenceItem from "@/app/components/occurrence-item";
 import { prismaClient } from "@/app/lib/prisma";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Home",
+};
+
 const Page = async () => {
   const pendingOccurrences = await prismaClient.occurrence.findMany({
     where: {
