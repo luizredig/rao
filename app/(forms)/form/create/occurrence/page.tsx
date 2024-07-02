@@ -190,7 +190,7 @@ const Page = () => {
   }, [fetchTags]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+    <div className="flex min-h-screen w-full flex-col items-center justify-between overflow-y-scroll p-24">
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
@@ -440,7 +440,7 @@ const Page = () => {
           <Button type="submit">Enviar</Button>
         </form>
       </Form>
-    </main>
+    </div>
   );
 };
 
