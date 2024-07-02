@@ -102,7 +102,7 @@ const Page = ({ params }: { params: { id: string } }) => {
   return (
     <>
       {occurrence && (
-        <div className="mx-32 flex h-screen max-w-full flex-row">
+        <div className="flex h-screen max-w-full flex-row">
           {/* Painel da esquerda */}
           <div className="flex h-full w-1/3 flex-col items-center gap-8 bg-[#fafafa] py-5">
             <Avatar className="h-80 w-80 text-2xl">
