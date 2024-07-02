@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback } from "@/app/components/ui/avatar";
 import {
   CalendarIcon,
   CheckIcon,
+  ClockIcon,
   EyeOffIcon,
   TagIcon,
   UserIcon,
@@ -19,6 +20,7 @@ import {
   TooltipTrigger,
 } from "@/app/components/ui/tooltip";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface OccurrenceViewProps {
   anonymous: boolean;
@@ -43,6 +45,8 @@ interface OccurrenceViewProps {
 
 const Page = ({ params }: { params: { id: string } }) => {
   const [occurrence, setOccurrence] = useState<OccurrenceViewProps>();
+
+  const router = useRouter();
 
   useEffect(() => {
     const handleGetOccurrence = async () => {
@@ -70,7 +74,7 @@ const Page = ({ params }: { params: { id: string } }) => {
   }, [params.id]);
 
   const handleSetOccurrenceClassification = async (
-    statusId: "approved" | "rejected",
+    classificationId: "approved" | "rejected" | "pending",
   ) => {
     try {
       const response = await fetch(`/api/update/occurrence/${occurrence?.id}`, {
@@ -78,15 +82,18 @@ const Page = ({ params }: { params: { id: string } }) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ statusId, classificationId: "completed" }),
+        body: JSON.stringify({
+          statusId: classificationId === "pending" ? "pending" : "completed",
+          classificationId,
+        }),
       });
 
       if (!response.ok) {
         throw new Error("Network response was not ok.");
       }
 
-      const result = await response.json();
-      console.log(result);
+      router.push("/home");
+      router.refresh();
     } catch (error) {
       console.error("Error:", error);
     }
@@ -150,29 +157,44 @@ const Page = ({ params }: { params: { id: string } }) => {
             <div className="flex w-full flex-row justify-center gap-4">
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger className="rounded-full bg-red-500 p-3 hover:bg-red-600">
-                    <XIcon className="text-white" />
+                  <TooltipTrigger
+                    className="rounded-full bg-yellow-300 p-3 hover:bg-yellow-500"
+                    onClick={() => handleSetOccurrenceClassification("pending")}
+                  >
+                    <ClockIcon className="text-white" />
                   </TooltipTrigger>
 
-                  <TooltipContent
+                  <TooltipContent>
+                    <p>Deixar pendente</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger
+                    className="rounded-full bg-red-500 p-3 hover:bg-red-600"
                     onClick={() =>
                       handleSetOccurrenceClassification("rejected")
                     }
                   >
+                    <XIcon className="text-white" />
+                  </TooltipTrigger>
+
+                  <TooltipContent>
                     <p>Não aprovar</p>
                   </TooltipContent>
                 </Tooltip>
 
                 <Tooltip>
-                  <TooltipTrigger className="rounded-full bg-green-500 p-3 hover:bg-green-600">
-                    <CheckIcon className="text-white" />
-                  </TooltipTrigger>
-
-                  <TooltipContent
+                  <TooltipTrigger
+                    className="rounded-full bg-green-500 p-3 hover:bg-green-600"
                     onClick={() =>
                       handleSetOccurrenceClassification("approved")
                     }
                   >
+                    <CheckIcon className="text-white" />
+                  </TooltipTrigger>
+
+                  <TooltipContent>
                     <p>Aprovar</p>
                   </TooltipContent>
                 </Tooltip>
