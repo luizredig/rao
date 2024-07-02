@@ -22,8 +22,8 @@ const Page = async () => {
 
   return (
     <>
-      <div className="flex h-full flex-col gap-8">
-        <div className="mx-80 flex flex-col">
+      <div className="flex h-full flex-col gap-8 overflow-y-scroll px-20 py-5">
+        <div className="flex flex-col">
           <p className="mb-4 text-2xl font-semibold">Pendentes</p>
 
           {pendingOccurrences.length > 0 ? (
@@ -40,7 +40,7 @@ const Page = async () => {
           )}
         </div>
 
-        <div className="mx-80 flex flex-col">
+        <div className="flex flex-col">
           <p className="mb-4 text-2xl font-semibold">Concluídas</p>
 
           {completedOccurrences.length > 0 ? (
